@@ -223,9 +223,12 @@ extension _CBORDecoder.UnkeyedContainer {
         // Tagged value (epoch-baed date/time)
         case 0xc1:
             length = try getLengthOfItem(format: try self.peekByte(), startIndex: startIndex.advanced(by: 1)) + 1
+        // uuid
+        case 0xd8:
+            length = try getLengthOfItem(format: format, startIndex: startIndex)
         case 0xc2...0xdb:
             // FIXME
-            throw DecodingError.dataCorruptedError(in: self, debugDescription: "Handling tags (other than epoch-based date/time) is not supported yet")
+            throw DecodingError.dataCorruptedError(in: self, debugDescription: "Handling tags (other than epoch-based date/time) is not supported yet: 0x" + String(format: "%02x", format))
         case 0xe0...0xfb, 0xff:
             length = try getLengthOfItem(format: format, startIndex: startIndex.advanced(by: 1))
         default:
@@ -288,6 +291,8 @@ extension _CBORDecoder.UnkeyedContainer {
         case 0x7b:
             let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             return try CBORDecoder(input: remainingData).readLength(format, base: 0x60) + 8
+        case 0xd8:
+            return 16
         case 0xe0...0xf3:
             return 0
         case 0xf4, 0xf5, 0xf6, 0xf7, 0xf8:
